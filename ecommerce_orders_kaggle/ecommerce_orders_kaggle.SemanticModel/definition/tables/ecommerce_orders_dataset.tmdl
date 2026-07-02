@@ -1,0 +1,488 @@
+table ecommerce_orders_dataset
+	lineageTag: 07a566bd-c7a0-45b4-92ea-4654ef317e04
+
+	measure 'Overall Profit Margin %' = DIVIDE([Total Profit], [Total Revenue], 0)
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 37668775-4ff7-4eed-a29b-a426fbbe20c8
+
+	measure 'Total Revenue' = SUM('ecommerce_orders_dataset'[Order_Amount])
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
+		lineageTag: 242e056d-a203-41bd-8cbe-b64e7f7e38dc
+
+	measure 'Total Profit' = SUM('ecommerce_orders_dataset'[Profit_Amount])
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
+		lineageTag: f169e03d-f082-4f1f-a63a-d186cd04f5fc
+
+	measure 'Total Orders' = DISTINCTCOUNT('ecommerce_orders_dataset'[Order_ID])
+		formatString: 0
+		lineageTag: f25a383c-da1a-49d6-97fd-c4e6161153b4
+
+	measure 'Average Order Value (AOV)' = DIVIDE([Total Revenue], [Total Orders], 0)
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
+		lineageTag: aeede025-b6f2-4bc8-a19f-ae328a812eeb
+
+	measure 'Return Rate %' = DIVIDE(CALCULATE([Total Orders], 'ecommerce_orders_dataset'[Returned] = "Yes"), [Total Orders], 0)
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 317e31e7-68c5-40b9-9a95-e8f24d785b33
+
+	measure 'Net Revenue' = [Total Revenue] * (1 - [Return Rate %])
+		lineageTag: 38006fd4-abde-446b-b473-1cc72bf9476c
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Profit Forecast' = ```
+			
+			VAR LastActualDate = MAX('ecommerce_orders_dataset'[Order_Date])
+			VAR CurrentDate = MAX('DateTable'[Date])
+			VAR ActualProfit = [Total Profit]
+			// This assumes 10% growth compared to the exact same month last year
+			VAR ForecastedProfit = CALCULATE([Total Profit], SAMEPERIODLASTYEAR('DateTable'[Date])) * 1.10 
+			
+			RETURN
+			IF(
+			    CurrentDate <= LastActualDate, 
+			    ActualProfit, 
+			    ForecastedProfit
+			)
+			```
+		lineageTag: 63c0d752-4a60-4188-a83d-1668829dfaba
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Total Unique Customers' = DISTINCTCOUNT('ecommerce_orders_dataset'[Customer_ID])
+		formatString: 0
+		lineageTag: a30043c9-1565-4cc4-b1c2-307c66c6fb6d
+
+	measure 'Average CLV' = ```
+			
+			AVERAGEX(
+			    VALUES('ecommerce_orders_dataset'[Customer_ID]), 
+			    CALCULATE(MAX('ecommerce_orders_dataset'[Customer_Lifetime_Value]))
+			)
+			```
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
+		lineageTag: 733c99fb-4ccd-4342-bff2-51e7e8963e0a
+
+	measure 'Total CLV' = ```
+			
+			SUMX(
+			    VALUES('ecommerce_orders_dataset'[Customer_ID]), 
+			    CALCULATE(MAX('ecommerce_orders_dataset'[Customer_Lifetime_Value]))
+			)
+			```
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
+		lineageTag: b80a1961-fefb-4abb-b3fb-acde5e57299a
+
+	measure 'Average Review Rating' = AVERAGE('ecommerce_orders_dataset'[Review_Rating])
+		lineageTag: 9cbdb607-f164-43f1-b152-e37a2938661a
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Average Review Rating per Customer' =
+			
+			AVERAGEX(
+			    VALUES('ecommerce_orders_dataset'[Customer_ID]),
+			    CALCULATE(AVERAGE('ecommerce_orders_dataset'[Review_Rating]))
+			)
+		lineageTag: 0330ca72-dcd4-48d7-990f-ba227df865a5
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Order_ID
+		dataType: int64
+		formatString: 0
+		lineageTag: 8fcc4163-cc77-4e4d-85e9-d13fbab286fd
+		summarizeBy: count
+		sourceColumn: Order_ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column Customer_ID
+		dataType: string
+		lineageTag: 26c1a194-d898-4ab0-ae08-8dfa57e0ddcb
+		summarizeBy: none
+		sourceColumn: Customer_ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column Order_Date
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: b40afad4-168d-4e84-878e-88ae3e8b85bf
+		summarizeBy: none
+		sourceColumn: Order_Date
+
+		variation Variation
+			isDefault
+			relationship: 9e17bb3e-35c0-4a77-b1eb-7079c94296e1
+			defaultHierarchy: LocalDateTable_753920fe-0df6-4d7a-9219-bded6475a29d.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Year
+		dataType: int64
+		formatString: 0
+		lineageTag: 05843b10-8953-40eb-ad6c-9f9c8d10d79b
+		summarizeBy: sum
+		sourceColumn: Year
+
+		annotation SummarizationSetBy = Automatic
+
+	column Month
+		dataType: int64
+		formatString: 0
+		lineageTag: 46bfecb6-4382-46a4-b410-cbd567e232f5
+		summarizeBy: sum
+		sourceColumn: Month
+
+		annotation SummarizationSetBy = Automatic
+
+	column Day
+		dataType: int64
+		formatString: 0
+		lineageTag: 6ba4e907-bc1d-4108-8b12-5488e06e1e46
+		summarizeBy: sum
+		sourceColumn: Day
+
+		annotation SummarizationSetBy = Automatic
+
+	column Day_Of_Week
+		dataType: string
+		lineageTag: 4485c23c-ce92-4234-bc14-3cffadcfac2f
+		summarizeBy: none
+		sourceColumn: Day_Of_Week
+
+		annotation SummarizationSetBy = Automatic
+
+	column Quarter
+		dataType: int64
+		formatString: 0
+		lineageTag: c230c046-2051-45c2-b371-b3160f810aff
+		summarizeBy: sum
+		sourceColumn: Quarter
+
+		annotation SummarizationSetBy = Automatic
+
+	column Customer_Age
+		dataType: int64
+		formatString: 0
+		lineageTag: dd37a55f-1a4c-4f0f-a6d9-5f0713bf4708
+		summarizeBy: sum
+		sourceColumn: Customer_Age
+
+		annotation SummarizationSetBy = Automatic
+
+	column Customer_Gender
+		dataType: string
+		lineageTag: 18dd1c3d-40c0-4af8-b5bf-2512ded922de
+		summarizeBy: none
+		sourceColumn: Customer_Gender
+
+		annotation SummarizationSetBy = Automatic
+
+	column Country
+		dataType: string
+		lineageTag: 7dc199df-21ab-4b92-8969-a59fd50e7b00
+		dataCategory: Country
+		summarizeBy: none
+		sourceColumn: Country
+
+		annotation SummarizationSetBy = Automatic
+
+	column City
+		dataType: string
+		lineageTag: b4c40f29-df35-46c5-b829-8fe8ad665d5d
+		dataCategory: City
+		summarizeBy: none
+		sourceColumn: City
+
+		annotation SummarizationSetBy = Automatic
+
+	column Customer_Segment
+		dataType: string
+		lineageTag: db816ec4-15b2-49d0-a7cb-5434bc190578
+		summarizeBy: none
+		sourceColumn: Customer_Segment
+
+		annotation SummarizationSetBy = Automatic
+
+	column Product_ID
+		dataType: string
+		lineageTag: 134723b6-9f4a-43f5-9098-a979e70124d5
+		summarizeBy: none
+		sourceColumn: Product_ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column Product_Category
+		dataType: string
+		lineageTag: 8eb120ff-4070-4098-8fc6-aa38a8723dc8
+		summarizeBy: none
+		sourceColumn: Product_Category
+
+		annotation SummarizationSetBy = Automatic
+
+	column Product_Subcategory
+		dataType: string
+		lineageTag: 6ae246f6-0d8b-4499-a7fd-7d50668c4e2f
+		summarizeBy: none
+		sourceColumn: Product_Subcategory
+
+		annotation SummarizationSetBy = Automatic
+
+	column Brand
+		dataType: string
+		lineageTag: 7da47753-3dc7-4e2e-94c0-bfd1ab081f5d
+		summarizeBy: none
+		sourceColumn: Brand
+
+		annotation SummarizationSetBy = Automatic
+
+	column Unit_Price
+		dataType: double
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
+		lineageTag: 76913e87-e699-480f-87dd-53bd6b909ea1
+		summarizeBy: average
+		sourceColumn: Unit_Price
+
+		annotation SummarizationSetBy = User
+
+	column Quantity
+		dataType: int64
+		formatString: 0
+		lineageTag: 9b9eaa46-53d8-4727-80dd-fc8fe124aa6b
+		summarizeBy: average
+		sourceColumn: Quantity
+
+		annotation SummarizationSetBy = User
+
+	column Discount_Percent
+		dataType: double
+		formatString: 0%;-0%;0%
+		lineageTag: bbc34262-0c4e-44a9-9f4c-17b38fbda0fd
+		summarizeBy: average
+		sourceColumn: Discount_Percent
+
+		annotation SummarizationSetBy = User
+
+	column Discount_Amount
+		dataType: double
+		formatString: \$#,0.###############;(\$#,0.###############);\$#,0.###############
+		lineageTag: 7474f354-0f86-49a9-aa6c-2010de2fa385
+		summarizeBy: sum
+		sourceColumn: Discount_Amount
+
+		annotation SummarizationSetBy = Automatic
+
+	column Coupon_Used
+		dataType: string
+		lineageTag: 5b0cbe68-8612-48af-8cb1-601d924417a1
+		summarizeBy: none
+		sourceColumn: Coupon_Used
+
+		annotation SummarizationSetBy = Automatic
+
+	column Shipping_Cost
+		dataType: double
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
+		lineageTag: 5de478fa-9acc-4003-99b3-f17059ee2975
+		summarizeBy: sum
+		sourceColumn: Shipping_Cost
+
+		annotation SummarizationSetBy = User
+
+	column Tax_Amount
+		dataType: double
+		formatString: \$#,0.###############;(\$#,0.###############);\$#,0.###############
+		lineageTag: 978d741f-c302-448f-8d50-c271429f2990
+		summarizeBy: sum
+		sourceColumn: Tax_Amount
+
+		annotation SummarizationSetBy = Automatic
+
+	column Order_Amount
+		dataType: double
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
+		lineageTag: 77cf6559-9b36-48e8-9204-276f26a3a649
+		summarizeBy: sum
+		sourceColumn: Order_Amount
+
+		annotation SummarizationSetBy = Automatic
+
+	column Payment_Method
+		dataType: string
+		lineageTag: 46dbf115-770d-4e23-9c31-bbf68785167a
+		summarizeBy: none
+		sourceColumn: Payment_Method
+
+		annotation SummarizationSetBy = Automatic
+
+	column Device_Type
+		dataType: string
+		lineageTag: e4a14e24-aae2-4e91-b0b3-21f1487b38bb
+		summarizeBy: none
+		sourceColumn: Device_Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column Traffic_Source
+		dataType: string
+		lineageTag: 7c2bf360-7470-418a-be81-7b6fe9693109
+		summarizeBy: none
+		sourceColumn: Traffic_Source
+
+		annotation SummarizationSetBy = Automatic
+
+	column Membership_Status
+		dataType: string
+		lineageTag: 9b1b4098-c745-41b1-a35f-594000121d9c
+		summarizeBy: none
+		sourceColumn: Membership_Status
+
+		annotation SummarizationSetBy = Automatic
+
+	column Shipping_Method
+		dataType: string
+		lineageTag: 88634469-bc22-48d2-89f4-a657fb946146
+		summarizeBy: none
+		sourceColumn: Shipping_Method
+
+		annotation SummarizationSetBy = Automatic
+
+	column Warehouse_Region
+		dataType: string
+		lineageTag: 196e97f2-460f-4760-9a72-0bf6eb934308
+		dataCategory: Country
+		summarizeBy: none
+		sourceColumn: Warehouse_Region
+
+		annotation SummarizationSetBy = Automatic
+
+	column Delivery_Days
+		dataType: int64
+		formatString: 0
+		lineageTag: 7db1035d-03b2-4ee1-ab39-b8db2f87cc30
+		summarizeBy: average
+		sourceColumn: Delivery_Days
+
+		annotation SummarizationSetBy = User
+
+	column Order_Status
+		dataType: string
+		lineageTag: 8f5ccbd5-5f58-46eb-b573-16ab6290e75e
+		summarizeBy: none
+		sourceColumn: Order_Status
+
+		annotation SummarizationSetBy = Automatic
+
+	column Returned
+		dataType: string
+		lineageTag: a4bebead-bced-4cde-b5e8-d6c0301e9d5a
+		summarizeBy: none
+		sourceColumn: Returned
+
+		annotation SummarizationSetBy = Automatic
+
+	column Review_Rating
+		dataType: double
+		lineageTag: 11e1e319-e0d7-4f31-94b1-243d26d05f7b
+		summarizeBy: average
+		sourceColumn: Review_Rating
+
+		annotation SummarizationSetBy = User
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Customer_Lifetime_Value
+		dataType: double
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
+		lineageTag: ef4ae73b-2805-4402-8145-5e411c6f0082
+		summarizeBy: sum
+		sourceColumn: Customer_Lifetime_Value
+
+		annotation SummarizationSetBy = User
+
+	column Profit_Margin_Percent
+		dataType: double
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 9d80776d-d887-4ace-aea6-1079b82404ce
+		summarizeBy: sum
+		sourceColumn: Profit_Margin_Percent
+
+		annotation SummarizationSetBy = Automatic
+
+	column Profit_Amount
+		dataType: double
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
+		lineageTag: 9c9d7090-20bc-4e1c-9a9d-39c33c403a0c
+		summarizeBy: sum
+		sourceColumn: Profit_Amount
+
+		annotation SummarizationSetBy = Automatic
+
+	column Season
+		dataType: string
+		lineageTag: 67ec7275-be74-4b6a-b48f-311af62a639d
+		summarizeBy: none
+		sourceColumn: Season
+
+		annotation SummarizationSetBy = Automatic
+
+	column Holiday_Season
+		dataType: string
+		lineageTag: d5255251-ce26-4d86-bf26-4e526b2b7e7b
+		summarizeBy: none
+		sourceColumn: Holiday_Season
+
+		annotation SummarizationSetBy = Automatic
+
+	column High_Value_Order
+		dataType: string
+		lineageTag: 04be68be-c606-404c-812b-d910d81c4259
+		summarizeBy: none
+		sourceColumn: High_Value_Order
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Age Group' = ```
+			
+			SWITCH(
+			    TRUE(),
+			    'ecommerce_orders_dataset'[Customer_Age] <= 25, "18-25 (Young Adult)",
+			    'ecommerce_orders_dataset'[Customer_Age] >= 26 && 'ecommerce_orders_dataset'[Customer_Age] <= 45, "26-45 (Adult)",
+			    'ecommerce_orders_dataset'[Customer_Age] >= 46 && 'ecommerce_orders_dataset'[Customer_Age] <= 60, "46-60 (Middle Age)",
+			    'ecommerce_orders_dataset'[Customer_Age] >= 61, "61-75 (Senior)",
+			    "Blank"
+			)
+			
+			```
+		lineageTag: 8522bc59-7092-4afc-b99f-26267f0bc96f
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	partition ecommerce_orders_dataset = m
+		mode: import
+		source =
+				let
+				  Source = Csv.Document(File.Contents("C:\Users\olive\Downloads\ecommerce_orders_dataset.csv"), [Delimiter = ",", Columns = 41, QuoteStyle = QuoteStyle.None]),
+				  #"Promoted headers" = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+				  #"Changed column type" = Table.TransformColumnTypes(#"Promoted headers",{{"Order_ID", Int64.Type}, {"Customer_ID", type text}, {"Order_Date", type date}, {"Year", Int64.Type}, {"Month", Int64.Type}, {"Day", Int64.Type}, {"Day_Of_Week", type text}, {"Quarter", Int64.Type}, {"Customer_Age", Int64.Type}, {"Customer_Gender", type text}, {"Country", type text}, {"City", type text}, {"Customer_Segment", type text}, {"Product_ID", type text}, {"Product_Category", type text}, {"Product_Subcategory", type text}, {"Brand", type text}, {"Unit_Price", type number}, {"Quantity", Int64.Type}, {"Discount_Percent", Int64.Type}, {"Discount_Amount", type number}, {"Coupon_Used", type text}, {"Shipping_Cost", type number}, {"Tax_Amount", type number}, {"Order_Amount", type number}, {"Payment_Method", type text}, {"Device_Type", type text}, {"Traffic_Source", type text}, {"Membership_Status", type text}, {"Shipping_Method", type text}, {"Warehouse_Region", type text}, {"Delivery_Days", Int64.Type}, {"Order_Status", type text}, {"Returned", type text}, {"Review_Rating", type number}, {"Customer_Lifetime_Value", type number}, {"Profit_Margin_Percent", type number}, {"Profit_Amount", type number}, {"Season", type text}, {"Holiday_Season", type text}, {"High_Value_Order", type text}}),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Changed column type",{{"Discount_Percent", Int64.Type}}),
+				    #"Calculated Percentage" = Table.TransformColumns(#"Changed Type", {{"Discount_Percent", each _ * 100 / 100, type number}}),
+				    #"Calculated Percent Of" = Table.TransformColumns(#"Calculated Percentage", {{"Discount_Percent", each _ / 100 * 100, type number}}),
+				    #"Changed Type1" = Table.TransformColumnTypes(#"Calculated Percent Of",{{"Discount_Percent", Percentage.Type}}),
+				    #"Calculated Percent Of1" = Table.TransformColumns(#"Changed Type1", {{"Discount_Percent", each _ / 100 * 100, type number}}),
+				    #"Divided Column" = Table.TransformColumns(#"Calculated Percent Of1", {{"Discount_Percent", each _ / 100, type number}}),
+				    #"Changed Type2" = Table.TransformColumnTypes(#"Divided Column",{{"Discount_Percent", Percentage.Type}}),
+				    #"Divided Column1" = Table.TransformColumns(#"Changed Type2", {{"Profit_Margin_Percent", each _ / 100, type number}}),
+				    #"Changed Type3" = Table.TransformColumnTypes(#"Divided Column1",{{"Profit_Margin_Percent", Percentage.Type}})
+				in
+				    #"Changed Type3"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

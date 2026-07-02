@@ -1,0 +1,5 @@
+relationship 9e17bb3e-35c0-4a77-b1eb-7079c94296e1
+	joinOnDateBehavior: datePartOnly
+	fromColumn: ecommerce_orders_dataset.Order_Date
+	toColumn: LocalDateTable_753920fe-0df6-4d7a-9219-bded6475a29d.Date
+

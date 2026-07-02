@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Report",
+    "displayName": "ecommerce_orders_kaggle"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "4f172187-aed8-4a1c-a7cc-6e3e109bb46a"
+  }
+}

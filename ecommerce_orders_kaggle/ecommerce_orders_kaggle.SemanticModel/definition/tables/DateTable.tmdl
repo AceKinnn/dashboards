@@ -1,0 +1,48 @@
+table DateTable
+	lineageTag: d07c3a1b-eb78-472f-ab6e-2ee77ce385da
+	dataCategory: Time
+
+	column Date
+		isKey
+		formatString: Long Date
+		lineageTag: a01a4e03-547f-424c-902f-e7e1d7e0f22a
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Date]
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Year = YEAR('DateTable'[Date])
+		formatString: 0
+		lineageTag: 394e59c4-aa88-4c9a-a958-3bfa199ba6b6
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column MonthName = FORMAT('DateTable'[Date], "mmm")
+		lineageTag: 58fdf353-c09d-4864-ad8f-0323b0015f90
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column MonthNumber = MONTH('DateTable'[Date])
+		formatString: 0
+		lineageTag: 4b116fa0-1dae-4b2b-8db7-2d8e1e799857
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column YearMonth = FORMAT('DateTable'[Date], "mmm yyyy")
+		lineageTag: 6f3519ee-2cb0-4643-a3e9-c0d32ba3a2da
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	partition DateTable = calculated
+		mode: import
+		source = CALENDAR(MIN('ecommerce_orders_dataset'[Order_Date]), MAX('ecommerce_orders_dataset'[Order_Date]))
+
+	annotation PBI_Id = 9728eafd79244e6ab1f9155033520265
+

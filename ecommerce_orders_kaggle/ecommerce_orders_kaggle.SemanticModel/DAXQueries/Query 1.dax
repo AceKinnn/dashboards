@@ -1,0 +1,13 @@
+// Welcome to DAX query view! Learn more about DAX queries at https://aka.ms/dax-queries.
+// Right-click on tables, columns, or measures in the data pane to access quick queries, or ask Copilot for help writing DAX.
+
+// Select "Run" to try this sample DAX query.
+Age_Group = 
+SWITCH(
+    TRUE(),
+    'Table'[Age] <= 25, "18-25 (Young Adult)",
+    'Table'[Age] >= 26 && 'Table'[Age] <= 45, "26-45 (Adult)",
+    'Table'[Age] >= 46 && 'Table'[Age] <= 60, "46-60 (Middle Age)",
+    'Table'[Age] >= 61, "61-75 (Senior)",
+    "Blank"
+)
